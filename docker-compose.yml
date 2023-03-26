@@ -30,7 +30,7 @@ services:
       - flask
 
   redis:
-    image: redis:latest
+    image: redislabs/redismod
     container_name: redis
     networks:
       - internal
