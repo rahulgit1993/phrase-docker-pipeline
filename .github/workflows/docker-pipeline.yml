@@ -1,0 +1,56 @@
+name: Deploy to AWS instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform: deploy or delete'
+        required: true
+        default: 'deploy'
+
+jobs:
+  deploy:
+    if: github.event.inputs.action == 'deploy'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up SSH agent
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        #ssh-keyscan -t rsa -H ${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} >> ~/.ssh/known_hosts
+
+    - name: Deploy files to AWS instance
+      run: |
+        ls -al
+        pwd
+        chmod +x entrypoint.sh
+        zip -r python-app.zip Dockerfile app.py create_db.py docker-compose.yml drop_db.py entrypoint.sh requirements.txt nginx
+        scp -i ~/.ssh/id_rsa -r -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" /home/runner/work/stackgenie-devops-python/stackgenie-devops-python/python-app.zip ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }}:/home/ec2-user/docker-deployment
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && unzip python-app.zip"
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && sudo docker-compose up --build -d"
+
+    - name: Cleanup the directory
+      run: |
+        sleep 10
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && sudo docker ps" 
+
+  delete:
+    if: github.event.inputs.action == 'delete'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up SSH agent
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -t rsa -H ${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} >> ~/.ssh/known_hosts
+
+    - name: Delete files from AWS instance
+      run: |
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "rm -rf /home/ec2-user/docker-deployment"
