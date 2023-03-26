@@ -30,6 +30,7 @@ jobs:
         PWD=`pwd`
         chmod +x entrypoint.sh
         zip -r python-app.zip Dockerfile app.py create_db.py docker-compose.yml drop_db.py entrypoint.sh requirements.txt nginx
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "mkdir -p /home/ubuntu/docker-deployment"
         scp -i ~/.ssh/id_rsa -r -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" $PWD/python-app.zip ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }}:/home/ubuntu/docker-deployment
         ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ubuntu/docker-deployment && unzip python-app.zip"
         ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ubuntu/docker-deployment && sudo docker-compose up --build -d"
