@@ -27,7 +27,7 @@ jobs:
     - name: Deploy files to AWS instance
       run: |
         ls -al
-        PWD=pwd
+        PWD=`pwd`
         chmod +x entrypoint.sh
         zip -r python-app.zip Dockerfile app.py create_db.py docker-compose.yml drop_db.py entrypoint.sh requirements.txt nginx
         scp -i ~/.ssh/id_rsa -r -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" $PWD/python-app.zip ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }}:/home/ubuntu/docker-deployment
