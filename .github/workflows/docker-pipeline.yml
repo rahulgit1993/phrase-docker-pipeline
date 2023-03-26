@@ -30,14 +30,14 @@ jobs:
         pwd
         chmod +x entrypoint.sh
         zip -r python-app.zip Dockerfile app.py create_db.py docker-compose.yml drop_db.py entrypoint.sh requirements.txt nginx
-        scp -i ~/.ssh/id_rsa -r -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" /home/runner/work/stackgenie-devops-python/stackgenie-devops-python/python-app.zip ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }}:/home/ec2-user/docker-deployment
-        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && unzip python-app.zip"
-        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && sudo docker-compose up --build -d"
+        scp -i ~/.ssh/id_rsa -r -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" /home/runner/work/stackgenie-devops-python/stackgenie-devops-python/python-app.zip ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }}:/home/ubuntu/docker-deployment
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ubuntu/docker-deployment && unzip python-app.zip"
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ubuntu/docker-deployment && sudo docker-compose up --build -d"
 
     - name: Cleanup the directory
       run: |
         sleep 10
-        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ec2-user/docker-deployment && sudo docker ps" 
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "cd /home/ubuntu/docker-deployment && sudo docker ps" 
 
   delete:
     if: github.event.inputs.action == 'delete'
@@ -53,4 +53,4 @@ jobs:
 
     - name: Delete files from AWS instance
       run: |
-        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ec2-user@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "rm -rf /home/ec2-user/docker-deployment"
+        ssh -i ~/.ssh/id_rsa -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" ubuntu@${{ secrets.AWS_INSTANCE_PUBLIC_DNS }} "rm -rf /home/ubuntu/docker-deployment"
