@@ -5,6 +5,7 @@ services:
     build:
       context: .
     image: app:latest
+    restart: unless-stopped
     container_name: flask
     environment:
       DATABASE_URI: 'mysql+pymysql://admin:admin123@mysql:3306/flask'
@@ -16,6 +17,7 @@ services:
 
   nginx:
     image: nginx:latest
+    restart: unless-stopped
     container_name: nginx
     ports:
       - "80:80"
@@ -31,6 +33,7 @@ services:
 
   redis:
     image: redislabs/redismod
+    restart: unless-stopped
     container_name: redis
     networks:
       - internal
@@ -38,7 +41,7 @@ services:
   db:
     container_name: mysql 
     image: mysql:5.7
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: 'root@admin@123'
       MYSQL_DATABASE: 'flask'
